@@ -55,10 +55,10 @@
   --edge-color: #4a4a60;
 
   /* Observed map node colours */
-  --node-obs-integrated-bg:         #241a00;
-  --node-obs-integrated-border:     #ffd136;
-  --node-obs-weak-bg:               #1f1400;
-  --node-obs-weak-border:           #fbbf24;
+  --node-obs-integrated-bg:         #062e16;
+  --node-obs-integrated-border:     #4ade80;
+  --node-obs-weak-bg:               #291800;
+  --node-obs-weak-border:           #fb923c;
   --node-obs-underexplained-bg:     #2d0808;
   --node-obs-underexplained-border: #f87171;
   --node-obs-inconsistent-bg:       #2d0818;
@@ -67,12 +67,12 @@
   --node-obs-disconnected-border:   #71717a;
 
   /* Framework node colours */
-  --node-fw-observed-bg:     #241a00;
-  --node-fw-observed-border: #ffd136;
-  --node-fw-inferred-bg:     #170f3a;
-  --node-fw-inferred-border: #a78bfa;
-  --node-fw-optional-bg:     #141e2a;
-  --node-fw-optional-border: #64748b;
+  --node-fw-observed-bg:     #062e16;
+  --node-fw-observed-border: #4ade80;
+  --node-fw-inferred-bg:     #291800;
+  --node-fw-inferred-border: #fb923c;
+  --node-fw-optional-bg:     #18181c;
+  --node-fw-optional-border: #71717a;
 }
 
 /* ── Light theme overrides ──────────────────────────────────── */
@@ -91,22 +91,22 @@ html.light {
   --canvas-bg:       #f5f5f7;
   --canvas-dot:      #dcdce4;
   --edge-color:      #b0b0c0;
-  --node-obs-integrated-bg:         #fffbe6;
-  --node-obs-integrated-border:     #d4a017;
-  --node-obs-weak-bg:               #fff8e1;
-  --node-obs-weak-border:           #d97706;
+  --node-obs-integrated-bg:         #f0fdf4;
+  --node-obs-integrated-border:     #16a34a;
+  --node-obs-weak-bg:               #fff7ed;
+  --node-obs-weak-border:           #ea580c;
   --node-obs-underexplained-bg:     #fff0f0;
   --node-obs-underexplained-border: #ef4444;
   --node-obs-inconsistent-bg:       #fff0f8;
   --node-obs-inconsistent-border:   #ec4899;
   --node-obs-disconnected-bg:       #f5f5f7;
   --node-obs-disconnected-border:   #71717a;
-  --node-fw-observed-bg:     #fffbe6;
-  --node-fw-observed-border: #d4a017;
-  --node-fw-inferred-bg:     #f3f0ff;
-  --node-fw-inferred-border: #7c3aed;
-  --node-fw-optional-bg:     #f0f4fa;
-  --node-fw-optional-border: #475569;
+  --node-fw-observed-bg:     #f0fdf4;
+  --node-fw-observed-border: #16a34a;
+  --node-fw-inferred-bg:     #fff7ed;
+  --node-fw-inferred-border: #ea580c;
+  --node-fw-optional-bg:     #f5f5f7;
+  --node-fw-optional-border: #71717a;
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */

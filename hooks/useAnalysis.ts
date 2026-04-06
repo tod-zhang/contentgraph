@@ -69,7 +69,7 @@ export function useAnalysis() {
     setCurrentStage('Classifying content…')
 
     try {
-      const res = await fetch('/api/analyze-content', {
+      const res = await fetch('/contentgraph/api/analyze-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ export function useAnalysis() {
       setPhase('phase2')
       setCurrentStage('Building explanation framework…')
 
-      fetch('/api/analyze-content', {
+      fetch('/contentgraph/api/analyze-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

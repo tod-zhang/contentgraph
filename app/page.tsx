@@ -8,6 +8,7 @@ import WritingGuidancePanel from '@/components/WritingGuidancePanel'
 import Nav from '@/components/Nav'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import { slugify, stripQuotes } from '@/lib/utils'
+import { downloadMarkdown } from '@/lib/download'
 import type { WritingGuidance, ExplanationFramework } from '@/lib/types'
 
 const ObservedGraph = dynamic(() => import('@/components/ObservedGraph'), { ssr: false })
@@ -59,15 +60,7 @@ function buildGuidanceMarkdown(guidance: WritingGuidance, framework?: Explanatio
   return lines.join('\n')
 }
 
-function downloadMarkdown(content: string, filename: string) {
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+// downloadMarkdown imported from lib/download
 
 // ─── API key ─────────────────────────────────────────────────────────────────
 
@@ -313,6 +306,13 @@ export default function Home() {
     if (phase1Done) setInputExpanded(false)
   }, [phase1Done])
 
+  // Auto-trigger Phase 2 when Phase 1 completes
+  useEffect(() => {
+    if (phase === 'phase1_done' && keySet) {
+      analyzePhase2(apiKey, provider)
+    }
+  }, [phase, keySet, apiKey, provider, analyzePhase2])
+
   // Show graph 800ms after findings panel appears
   useEffect(() => {
     if (data.observedMap && !graphVisible) {
@@ -323,11 +323,26 @@ export default function Home() {
 
   return (
     <>
-      <Nav showReset={phase !== 'idle'} onReset={handleReset} />
+      {/* ── Header ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)] border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
+          <a href="https://fuckseo.io" className="flex items-center gap-2.5">
+            <img src="/contentgraph/logo.webp" alt="Fuck SEO" className="w-8 h-8 rounded-full" />
+            <span className="text-sm font-semibold text-white">Fuck SEO</span>
+          </a>
+          <div className="flex items-center gap-6">
+            <a href="https://fuckseo.io/blog/" className="text-sm font-medium text-white hover:text-white/70 transition">Blog</a>
+            <a href="https://fuckseo.io/tools" className="text-sm font-medium text-white hover:text-white/70 transition">Tools</a>
+            <a href="https://fuckseo.io/trade" className="text-sm font-medium text-white hover:text-white/70 transition">Trade</a>
+            <a href="https://fuckseo.io/contact" className="text-sm font-medium text-white hover:text-white/70 transition">Contact</a>
+          </div>
+        </div>
+      </nav>
+
       <div className="min-h-screen bg-[var(--bg)]" style={{ fontSize: 16, lineHeight: 'normal' }}>
 
         {/* Narrow column — header, input, findings */}
-        <div className="max-w-2xl mx-auto px-6 pt-10 pb-0 space-y-6">
+        <div className="max-w-5xl mx-auto px-6 pt-20 pb-0 space-y-6">
 
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -342,18 +357,18 @@ export default function Home() {
           {/* API key entry */}
           <div>
             {!keySet ? (
-              <div className="rounded-xl border border-[var(--border-solid)] bg-[var(--surface)] p-4">
+              <div key="key-input" className="rounded-xl border border-[var(--border-solid)] bg-[var(--surface)] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm font-medium text-[var(--text)]">LLM Provider</div>
-                  <div className="flex rounded-lg border border-[var(--border-solid)] overflow-hidden text-sm">
+                  <div className="inline-flex p-1 bg-white/[0.03] border border-white/10 rounded-full gap-1">
                     {(['anthropic', 'deepseek'] as const).map(p => (
                       <button
                         key={p}
                         onClick={() => saveProvider(p)}
-                        className={`px-3 py-1.5 font-medium transition-colors ${
+                        className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
                           provider === p
-                            ? 'bg-[var(--text)] text-[var(--bg)]'
-                            : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-white/40 hover:text-white/70'
                         }`}
                       >
                         {p === 'anthropic' ? 'Claude' : 'DeepSeek'}
@@ -371,12 +386,12 @@ export default function Home() {
                     value={keyInput}
                     onChange={e => setKeyInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && keyInput.trim()) saveKey(keyInput.trim()) }}
-                    className="flex-1 text-sm border border-[var(--border-solid)] bg-[var(--surface-2)] text-[var(--text)] rounded-lg px-3 py-2 font-mono focus:outline-none focus:ring-1 focus:ring-[var(--text-dim)] placeholder:text-[var(--text-dim)]"
+                    className="flex-1 text-sm border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 font-mono focus:outline-none focus:ring-1 focus:ring-white/20 placeholder:text-white/30"
                   />
                   <button
                     onClick={() => { if (keyInput.trim()) saveKey(keyInput.trim()) }}
                     disabled={!keyInput.trim()}
-                    className="px-4 py-2 text-sm font-medium bg-[var(--text)] text-[var(--bg)] rounded-lg hover:opacity-80 disabled:opacity-40 transition-opacity"
+                    className="px-4 py-2 text-sm font-medium bg-white/[0.04] border border-white/10 text-white rounded-lg hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-40 transition-all"
                   >
                     Set key
                   </button>
@@ -384,7 +399,7 @@ export default function Home() {
                 <p className="text-xs text-[var(--text-dim)] mt-1.5">Stored in sessionStorage only — cleared when you close the tab.</p>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-xs text-[var(--text-dim)]">
+              <div key="key-set" className="flex items-center gap-2 text-xs text-[var(--text-dim)]">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 {provider === 'anthropic' ? 'Claude' : 'DeepSeek'} API key set
                 <button onClick={clearKey} className="underline hover:text-[var(--text-muted)] ml-1">Clear</button>
@@ -416,15 +431,15 @@ export default function Home() {
               <div className="rounded-xl border border-[var(--border-solid)] bg-[var(--surface)] p-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="text-sm font-medium text-[var(--text)]">Input type</div>
-                  <div className="flex rounded-lg border border-[var(--border-solid)] overflow-hidden text-sm">
+                  <div className="inline-flex p-1 bg-white/[0.03] border border-white/10 rounded-full gap-1">
                     {(['html', 'text'] as const).map(t => (
                       <button
                         key={t}
                         onClick={() => setInputType(t)}
-                        className={`px-3 py-1.5 font-medium transition-colors ${
+                        className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
                           inputType === t
-                            ? 'bg-[var(--text)] text-[var(--bg)]'
-                            : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-white/40 hover:text-white/70'
                         }`}
                       >
                         {t.toUpperCase()}
@@ -440,7 +455,7 @@ export default function Home() {
                     ? 'Paste page source here. (View > Developer > View Source → Select All → Copy)'
                     : 'Paste plain text content here…'}
                   rows={8}
-                  className="w-full text-sm border border-[var(--border-solid)] bg-[var(--surface-2)] text-[var(--text)] rounded-lg px-3 py-2.5 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-[var(--text-dim)] placeholder:text-[var(--text-dim)]"
+                  className="w-full text-sm border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2.5 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-white/20 placeholder:text-white/30"
                 />
 
                 <div className="flex items-center justify-between">
@@ -449,7 +464,7 @@ export default function Home() {
                     {phase !== 'idle' && (
                       <button
                         onClick={handleReset}
-                        className="px-4 py-2 text-sm font-medium text-[var(--text-muted)] border border-[var(--border-solid)] rounded-lg hover:border-[var(--border-hover)] transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-white/60 bg-white/[0.04] border border-white/10 rounded-lg hover:bg-white/[0.08] hover:border-white/20 transition-all"
                       >
                         Reset
                       </button>
@@ -457,7 +472,7 @@ export default function Home() {
                     <button
                       onClick={handleAnalyze}
                       disabled={!content.trim() || !keySet || isRunning || phase1Done}
-                      className="px-5 py-2 text-sm font-medium bg-[var(--text)] text-[var(--bg)] rounded-lg hover:opacity-80 disabled:opacity-40 transition-opacity"
+                      className="px-4 py-2 text-sm font-medium bg-white/[0.04] border border-white/10 text-white rounded-lg hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-40 transition-all"
                     >
                       {isPhase1Running ? 'Analyzing…' : 'Analyze'}
                     </button>
@@ -536,7 +551,7 @@ export default function Home() {
 
         {/* Narrow column — writing guidance */}
         {!!data.observedMap && (
-          <div className="max-w-2xl mx-auto px-6 mt-6 pb-10">
+          <div className="max-w-5xl mx-auto px-6 mt-6 pb-10">
             <div className="rounded-xl border border-[var(--border-solid)] bg-[var(--surface)] p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="text-sm font-semibold text-[var(--text)]">Writing Guidance</div>
@@ -587,6 +602,25 @@ export default function Home() {
           </div>
         )}
       </div>
+      {/* ── Footer (matches fuckseo.io Footer) ── */}
+      <footer className="border-t border-white/10 py-8 bg-[var(--bg)]">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src="/contentgraph/logo.webp" alt="Fuck SEO" className="w-5 h-5 rounded" />
+            <span className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Fuck SEO</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="https://fuckseo.io/blog/" className="text-xs text-gray-500 hover:text-gray-300 transition">Blog</a>
+            <a href="https://fuckseo.io/terms" className="text-xs text-gray-500 hover:text-gray-300 transition">Terms</a>
+            <a href="https://fuckseo.io/privacy" className="text-xs text-gray-500 hover:text-gray-300 transition">Privacy</a>
+            <a href="https://fuckseo.io/contact" className="text-xs text-gray-500 hover:text-gray-300 transition">Contact</a>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <span>WeChat: 18858072182</span>
+            <a href="mailto:zmd88259886@gmail.com" className="hover:text-gray-300 transition">Email: zmd88259886@gmail.com</a>
+          </div>
+        </div>
+      </footer>
     </>
   )
 }

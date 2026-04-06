@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
 import { INTEGRATION_KEY, NODE_OBS_COLORS, clampTooltipLeft, clampTooltipTop, computeSVOs, slugify } from '@/lib/utils'
+import { downloadPNG } from '@/lib/download'
 import type { ObservedMap, ObservedConcept, ObservedRelationship } from '@/lib/types'
 import { GraphToolbar, TooltipRow } from './GraphShared'
 
@@ -226,10 +227,7 @@ export default function ObservedGraph({ map }: Props) {
       const anchor = nodes.find(n => n.data.isAnchor)
       const topic = slugify(anchor?.data.label ?? 'graph')
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-      const a = document.createElement('a')
-      a.href = canvas.toDataURL('image/png')
-      a.download = `${date}-${topic}-1.png`
-      a.click()
+      downloadPNG(canvas.toDataURL('image/png'), `${date}-${topic}-1.png`)
     }
     img.src = url
   }, [])

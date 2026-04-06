@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
 import { BASIS_KEY, clampTooltipLeft, clampTooltipTop, computeSVOs, slugify } from '@/lib/utils'
+import { downloadPNG } from '@/lib/download'
 import type { ExplanationFramework, RecommendedConcept, WritingGuidance } from '@/lib/types'
 import { GraphToolbar, TooltipRow } from './GraphShared'
 
@@ -209,10 +210,7 @@ export default function ExplanationGraph({ framework, guidance, onNodeHover }: P
       const anchor = nodes.find(n => n.data.isAnchor)
       const topic = slugify(anchor?.data.label ?? 'graph')
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-      const a = document.createElement('a')
-      a.href = canvas.toDataURL('image/png')
-      a.download = `${date}-${topic}-2.png`
-      a.click()
+      downloadPNG(canvas.toDataURL('image/png'), `${date}-${topic}-2.png`)
     }
     img.src = url
   }, [])
